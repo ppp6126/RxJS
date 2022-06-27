@@ -1,0 +1,32 @@
+import { ajax } from 'rxjs/ajax';
+import { map } from 'rxjs/operators';
+
+interface Book {
+  url: string;
+  name: string;
+  isbn: string;
+  authors: string[];
+  numberOfPages: number;
+  publisher: string;
+  country: string;
+  mediaType: string;
+  released: string;
+  characters: string[];
+  povCharacters: string[];
+}
+
+const bookList$ = ajax.getJSON<Book[]>(
+  'https://www.anapioficeandfire.com/api/books'
+);
+
+const bookNameList$ = bookList$.pipe(
+  map(bookList => bookList.map(book => book.name))
+);
+
+const bookIsbnList$ = bookList$.pipe(
+  map(bookList => bookList.map(book => book.isbn))
+);
+
+bookList$.subscribe(response => console.log(response));
+bookNameList$.subscribe(bookNameList => console.log(bookNameList));
+bookIsbnList$.subscribe(bookIsbnList => console.log(bookIsbnList));

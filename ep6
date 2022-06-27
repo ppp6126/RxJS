@@ -1,0 +1,34 @@
+import { Observable } from 'rxjs';
+
+// convert fetch to Observable
+function fetchJSON(url: string) {
+  const controller = new AbortController();
+  const signal = controller.signal;
+  // ใช้ request กับ Fetch ได้ด้วย
+  const request = new Request(url, { signal });
+  return new Observable((observer) => {
+    fetch(request, { signal })
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        }
+        throw new Error(response.statusText);
+      })
+      .then((json) => {
+        observer.next(json);
+        observer.complete();
+      })
+      .catch((error) => {
+        observer.error(error);
+      });
+
+    return () => controller.abort();
+  });
+}
+
+//create subscript
+const subscription = fetchJSON(
+  'https://www.anapioficeandfire.com/api/books/1'
+).subscribe((val) => console.log(val));
+// unsubscribe
+// subscription.unsubscribe();
