@@ -91,62 +91,6 @@ function interval(milisec: number) {
   });
 }
 
-function tap(fn: (value: any) => void) {
-  return (source: Observable) =>
-    new Observable((observer) => {
-      console.log('subscribe!');
-      const subscription = source.subscribe({
-        next: (value) => {
-          // side effect
-          fn(value);
-          observer.next(value);
-        },
-        error: (err) => {
-          observer.error(err);
-        },
-        complete: () => {
-          observer.complete();
-        },
-      });
-
-      return () => {
-        console.log('unsubscribe!');
-        subscription.unsubscribe();
-      };
-    });
-}
-
-function share({ resetOnRefCountZero } = { resetOnRefCountZero: true }) {
-  return (source: Observable) => {
-    const subject = new Subject();
-    let subscription: Subscription;
-    let refCount = 0;
-    const connect = () => {
-      subscription = source.subscribe(subject);
-    };
-    const resetOnRefCount = () => {
-      if (refCount === 0) {
-        if (resetOnRefCountZero === true) {
-          subscription.unsubscribe();
-          subscription = null;
-        }
-      }
-    };
-    return new Observable((observer) => {
-      refCount++;
-      const subSubscription = subject.subscribe(observer);
-      if (!subscription) {
-        connect();
-      }
-      return () => {
-        refCount--;
-        resetOnRefCount();
-        subSubscription.unsubscribe();
-      };
-    });
-  };
-}
-
 const observer1: Observer = {
   next: (value: any) => console.log('observer1 next', value),
   error: (err: any) => console.log('observer1 error', err),
@@ -163,25 +107,15 @@ const observer3: Observer = {
   complete: () => console.log('observer3 complete'),
 };
 
-const observer4: Observer = {
-  next: (value: any) => console.log('observer4 next', value),
-  error: (err: any) => console.log('observer4 error', err),
-  complete: () => console.log('observer4 complete'),
-};
-
 const subscription = new Subscription();
-const source = interval(1000).pipe(
-  tap((val) => console.log('interval ปล่อย', val)),
-  share({ resetOnRefCountZero: false })
-);
+const source = interval(1000);
+const subject = new Subject();
+source.subscribe(subject);
 
-// subscription.add(source.subscribe(observer1));
-// subscription.add(source.subscribe(observer2));
-
-// setTimeout(() => subscription.add(source.subscribe(observer3)), 5000);
-
-// setTimeout(() => source.subscribe(observer4), 15000);
+// subject.subscribe(observer1);
+// subject.subscribe(observer2);
+// setTimeout(() => subject.subscribe(observer3), 5000);
 
 setTimeout(() => {
   subscription.unsubscribe();
-}, 10000);
+}, 5000);
